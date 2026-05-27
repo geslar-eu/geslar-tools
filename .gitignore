@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pyz
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.whl
+venv/
+.venv/
+env/
+.env/
+
+# Raw data — preuzeti dataseti ne idu u repo
+data/raw/
+data/filtered_lemmas.txt
+data/freq_filtered.txt
+data/final_wordlist.txt
+data/stopwords_hr.txt
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Komprimirane datoteke
+*.gz
+*.tgz
+*.zip
+*.tar
+
+# Logs
+*.log
