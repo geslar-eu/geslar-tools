@@ -18,7 +18,7 @@ wordlist i generacijska logika. Namijenjen za:
 |---|---|
 | `docs/wordlist/` | Metodologija odabira, analiza entropije, dijalekti |
 | `docs/sigurnost/` | CSPRNG, model prijetnji, usporedba standarda |
-| `docs/istraživanje/` | Pregled literature, inflektirani jezici, istraživačke praznine |
+| `docs/istrazivanje/` | Pregled literature, inflektirani jezici, istraživačke praznine |
 | `skripte/generiraj-wordlist/` | Pipeline: preuzimanje → filtriranje → izvoz u JS |
 | `skripte/analiziraj-wordlist/` | Analiza postojeće wordliste |
 | `analiza/zateceno-stanje/` | Izmjerene statistike trenutne wordliste |
