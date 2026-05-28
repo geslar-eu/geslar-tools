@@ -14,7 +14,9 @@ Format izlaza:
 """
 
 import sys
+import io
 import math
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 from datetime import date
 from pathlib import Path
 

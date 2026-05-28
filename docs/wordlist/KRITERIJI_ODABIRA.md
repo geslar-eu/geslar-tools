@@ -1,7 +1,7 @@
 # Kriteriji odabira riječi — Geslar wordlist
 
-Verzija: 1.0  
-Datum: 27.05.2026.
+Verzija: 1.1  
+Datum: 28.05.2026. (ažurirano na temelju empirijskog testiranja pipeline-a)
 
 Ovaj dokument obrazlaže svaki od kriterija koji se primjenjuje pri izgradnji
 Geslar wordliste. Svi kriteriji imaju empirijsku ili formalnu osnovu u
@@ -9,25 +9,29 @@ kriptografskom i lingvističkom istraživanju.
 
 ---
 
-## 1. Duljina: 4–9 znakova
+## 1. Duljina: 4–10 znakova
 
-**Kriterij:** Minimalna duljina 4, maksimalna 9 znakova.
+**Kriterij:** Minimalna duljina 4, maksimalna 10 znakova.
 
 **Razlozi:**
 
 - **EFF preporuka (2016):** EFF Diceware lista izbjegava jednoznačne i
   dvoznačne tokene koji se lako pobrkaju ili greškama utipkaju.
 - **BIP39 praksa:** BIP39 wordlista (2.048 rij.) limitira na 3–8 znakova.
-  Geslar je nešto liberalniji jer ima veći pool i ne ovisi o fizičkim kockicama.
+  Geslar je liberalniji jer ima veći pool i ne ovisi o fizičkim kockicama.
 - **Mobilno tipkanje:** Istraživanje tipkanja na mobilnim uređajima pokazuje
-  da je pogreška pri unosu proporcionalna duljini. Rijeci od 9+ znakova
+  da je pogreška pri unosu proporcionalna duljini. Rijeci od 10+ znakova
   uzrokuju značajno više "mistype" grešaka.
 - **Memorabilnost:** Kognitivna psihologija (Miller's Law, chunk theory) sugerira
-  da su segmenti od 4-9 znakova optimalni za kratkoročno pamćenje.
+  da su segmenti od 4-9 znakova optimalni, ali 10-značnice na HR-u (npr.
+  `planinski`, `plavičasti`, `srebrnast`) su još uvijek lako vizualizabilne.
+- **Empirijska kalibracija:** Testiranje pipeline-a pokazalo je da limit od 9
+  znakova eliminira 556 korisnih lema bez opravdanog razloga — uglavnom pridjevi
+  koji završavaju na `-ski`, `-ni`, `-čan` i koji su visoko memorabilni.
 
 **Što se odbacuje:**
 - 3-značnice (npr. `sat`, `bor`, `rak`) — prečeste, prebrojne, ambiguozne
-- 10+ znakova (npr. `organizirati`, `desinstallirati`) — teško za tipkanje,
+- 11+ znakova (npr. `organizirati`, `desinstallirati`) — teško za tipkanje,
   loš retention, često apstraktni pojmovi
 
 ---
@@ -86,23 +90,34 @@ kriptografskom i lingvističkom istraživanju.
 
 ---
 
-## 5. 4-char prefix uniqueness
+## 5. 4-char prefix uniqueness — ~~IZOSTAVLJEN~~ (v1.1)
 
-**Kriterij:** Za svaki prefix prvih 4 znaka zadržavamo samo jednu riječ
-(prvu abecednom redom).
+**Status: Isprobano, odbačeno na temelju empirijskog testiranja.**
 
-**Razlozi:**
+**Originalni razlog za uvođenje:**
+BIP39 zahtijeva da se svaka riječ može jednoznačno identificirati prvih 4 znaka,
+jer hardware walletovi (Ledger, Trezor) s malim displejom prikazuju samo 4 znaka.
 
-- **BIP39 standard:** BIP39 zahtijeva da se svaka riječ može jednoznačno
-  identificirati prvih 4 znaka. Razlog: hardware walletovi s malim displejom
-  prikazuju samo 4 znaka.
-- **Mobilno unošenje (autocomplete):** Ako korisnik tipka na mobilnom i
-  sustav predlaže nakon 4 znaka, ne smije biti dvosmislenosti.
-- **Smanjenje konfuznih parova:** `pravnik` i `pravda` počinju s `prav` —
-  razlikuju se tek od 5. znaka. U stresnom scenariju (npr. obnova accounta)
-  konfuzija je vjerojatna.
-- **Entropijski trošak:** Za pool od 7.776 rij., prefix uniqueness tipično
-  odbacuje 10-15% — prihvatljiv kompromis za dobivenu pouzdanost.
+**Zašto je odbačen za Geslar:**
+
+- **Pogrešan kontekst:** Geslar je web-based generator. Korisnik uvijek vidi
+  cijelu riječ prikazanu na ekranu — 4-char autocomplete nije relevantan.
+- **Katastrofalan utjecaj na HR pool:** Empirijsko testiranje pokazalo je da
+  4-char prefix filter eliminira **35%** valjanih lema:
+  - Primjeri kolizija: `agencija`+`agent`, `aktivan`+`aktivnost`,
+    `alergija`+`alergičan`, `arhitekt`+`arhiv`, `audicija`+`audio`
+  - Prefiks `rasp-` ima 50 lema — filter bi zadržao samo 1
+  - Krajnji rezultat: 5.001 → 2.660 (umjesto željenih ~6.600)
+- **Strukturalni razlog:** Hrvatski je izrazito prefiksalni jezik —
+  morfološka produktivnost s prefiksima `pre-`, `pro-`, `pri-`, `ras-`, `pod-`,
+  `nad-` znači da tisuće semantički različitih lema dijele 4-char prefix.
+  Za engleski (analitički jezik) ovaj je problem puno manji.
+- **Adekvatna zamjena postoji:** Levenshtein ≥ 3 check u `buildPassphrase()`
+  (geslar-web/core.js) sprječava generiranje vizualno sličnih parova
+  unutar iste fraze — što je stvarni sigurnosni problem, a ne prefix kolizije.
+
+**Referenca:** Testiranje pipeline-a 28.05.2026. —
+vidi `analiza/zateceno-stanje/` za detalje.
 
 ---
 
@@ -126,22 +141,30 @@ poboljšanje za v1.1.
 
 ---
 
-## 7. Frekvencijski filter (top-30k)
+## 7. Frekvencijski filter (top-50k)
 
-**Kriterij:** Zadržavamo samo lemme koje se pojavljuju u top-30.000 najfrekventnijih
+**Kriterij:** Zadržavamo samo lemme koje se pojavljuju u top-50.000 najfrekventnijih
 riječi OpenSubtitles HR korpusa.
 
 **Razlozi:**
 
-- **Familijarnost:** Manje frekventne riječi (npr. arhaizmi, tehnicizmi, dijalektizmi
-  koji nisu u svakodnevnoj upotrebi) smanjuju memorabilnost. Korisnik koji vidi
-  `krpelj` ili `brstur` ih ne može vizualizirati bez pozadinskog znanja.
+- **Familijarnost:** Manje frekventne riječi (npr. arhaizmi, tehnicizmi) smanjuju
+  memorabilnost. Korisnik koji vidi `krpelj` ili `brstur` ih ne može vizualizirati
+  bez pozadinskog znanja.
 - **Usmena komunikacija:** OpenSubtitles korpus baziran je na filmskim i TV
   titlovima — reflektira svakodnevni govorni jezik, ne literarni ili stručni.
-- **Threshold:** Top-30k je kompromis između familijarnosti (top-10k je prerestriktan)
-  i pokrivanja jezgre leksika (top-50k donosi previše rijetkih oblika).
-- **Kalibracija:** EFF Diceware lista je kalibrirana na "recognizable English words"
-  bez formalnog frekvencijskog praga, ali empirijski odgovara top-20-30k engleškog.
+- **Threshold kalibriran na HR morfologiju (ažurirano v1.1):** Inicijalni threshold
+  bio je top-30k (analogno engleskom EFF Diceware-u), ali empirijsko testiranje
+  pokazalo je fundamentalni problem: **HR nominativ jednine ima nižu individualnu
+  frekvenciju nego engleski ekvivalent** jer se svaki HR leksem rasprostire kroz
+  14 flektivnih oblika (7 padeža × 2 broja). Rezultat: hrLex nominativi koji su
+  izvorno u top-30k engleskog ekvivalenta pojavljuju se tek u pozicijama 30k-50k
+  u HR frekvencijskom rangu.
+  - top-30k: 53.493 lema → 5.001 prošlo (9,3%) — premalo
+  - top-50k: 53.493 lema → 6.044 prošlo (11,3%) — bolje, ali još uvijek konzervativno
+- **Kalibracija:** EFF Diceware lista kalibrirana je na "recognizable English words"
+  bez formalnog frekvencijskog praga. Top-50k HR je ekvivalent tog pristupa uz
+  korekciju za morfološku složenost.
 
 ---
 
@@ -167,10 +190,11 @@ riječi OpenSubtitles HR korpusa.
 
 | Kriterij | Utjecaj na pool | Primarni razlog |
 |---|---|---|
-| Duljina 4-9 zn. | -30% | Mobilno, pamtljivost |
+| Duljina 4-10 zn. | -29% od freq filtera | Mobilno, pamtljivost |
 | Samo nominativ jd. | Osnova filtriranja | Kanonski oblik, HR morfologija |
 | Samo Im. + Pridj. | -40% vs. svi POS | Konkretnost, imageability |
-| Bez -irati | -10% | Apstraktnost, duljina |
-| 4-char prefix unique | -10-15% | BIP39, mobilno autocomplete |
-| Freq. filter top-30k | -35% | Familijarnost, svakodnevni govor |
+| Bez -irati | -10% | Apstraktnost, duljina (automatski kroz MSD filter) |
+| ~~4-char prefix unique~~ | ~~-35%~~ **ODBAČENO** | Pogrešan kontekst (BIP39 ≠ web app) |
+| Freq. filter top-50k | -89% hrLex → 11% prošlo | Familijarnost, svakodnevni govor |
 | Bez profanity | <0,1% | UX, profesionalnost |
+| **Konačni pool (v1.1)** | **6.583** | 38,1b (3 rij.) / 50,7b (4 rij.) |

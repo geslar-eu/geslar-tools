@@ -8,15 +8,16 @@ Alat: `skripte/analiziraj-wordlist/analiziraj.py`
 
 | Metrika | Vrijednost |
 |---|---|
-| Ukupno riječi (raw WORDS array) | 8.192 |
-| WORD_POOL (bez dijakritika, ≥3 znaka) | 6.693 |
-| WORD_POOL_ALL (s dijakritikama, ≥3 znaka) | 8.191 |
-| Prosječna duljina (WORD_POOL) | 8,4 znaka |
+| Ukupno riječi (raw WORDS array) | 8.191 |
+| WORD_POOL (bez dijakritika, ≥3 znaka) | 6.692 |
+| WORD_POOL_ALL (s dijakritikama, ≥3 znaka) | 8.190 |
+| Prosječna duljina (WORD_POOL_ALL) | 8,5 znaka |
 | Medijan duljine | 8 znakova |
 | Riječi s dijakritikama | 1.498 (18,3%) |
 | Glagoli na -irati | 708 (8,6%) |
-| Minimalna duljina | 3 znaka |
-| Maksimalna duljina | 25 znakova |
+| Minimalna duljina (raw) | 2 znaka (`os` — filtrira se) |
+| Minimalna duljina (WORD_POOL_ALL) | 3 znaka |
+| Maksimalna duljina | 20 znakova (`institucionalizirati`) |
 
 ## Distribucija duljina
 

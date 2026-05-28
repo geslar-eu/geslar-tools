@@ -47,11 +47,13 @@ H_stvarna = log₂(n) + log₂(n-1) + ... + log₂(n-k+1)
 | EFF Diceware (2016) | Engleski | 7.776 | 12,92 | 38,8 | 51,7 | 64,6 |
 | BIP39 (2013) | Engleski | 2.048 | 11,00 | 33,0 | 44,0 | 55,0 |
 | niezgadniesz.pl | Poljski | ~5.000 | 12,29 | 36,9 | 49,1 | 61,4 |
-| Geslar (bez diak.) | Hrvatski | 6.693 | 12,70 | 38,1 | 50,8 | 63,5 |
-| Geslar (s diak.) | Hrvatski | 8.191 | 12,99 | 39,0 | 52,0 | 65,0 |
-| **Geslar hrLex*** | **Hrvatski** | **~7.776** | **12,92** | **38,8** | **51,7** | **64,6** |
+| Geslar (bez diak.) | Hrvatski | 6.692 | 12,70 | 38,1 | 50,8 | 63,5 |
+| Geslar (s diak.) | Hrvatski | 8.190 | 12,99 | 39,0 | 52,0 | 65,0 |
+| Geslar hrLex v1.0* | Hrvatski | 2.660 | 11,38 | 34,1 | 45,5 | 56,9 |
+| **Geslar hrLex v1.1†** | **Hrvatski** | **6.583** | **12,69** | **38,1** | **50,7** | **63,4** |
 
-*Projekcija nakon hrLex pipeline-a (ciljni pool = EFF Diceware ekvivalent)*
+*Pipeline v1.0: top-30k, max9, s 4-char prefix filterom — nije prihvaćeno (premali pool)*  
+†Pipeline v1.1: top-50k, max10, bez prefix filtera — izmjereno 28.05.2026.
 
 ## Sigurnosni kontekst
 

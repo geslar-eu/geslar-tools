@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import sys, io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 """
 Provjera kvalitete i finalni filteri wordliste.
 
@@ -6,11 +8,18 @@ Ulaz:  data/freq_filtered.txt
 Izlaz: data/final_wordlist.txt
 
 Filteri (redom):
-  1. Duljina: MIN_LEN=4, MAX_LEN=9
+  1. Duljina: MIN_LEN=4, MAX_LEN=10
   2. Samo mala slova + hrvatska dijakritika (bez brojeva, crtice, itd.)
   3. Stop words (data/stopwords_hr.txt ili ugrađeni minimalni set)
   4. Profanity lista (ugrađena)
-  5. 4-char prefix uniqueness (BIP39 princip)
+
+NAPOMENA: 4-char prefix uniqueness (BIP39 standard) namjerno je IZOSTAVLJEN.
+  - BIP39 zahtjev postoji zbog autocompleta na hardware walletima (Ledger, Trezor).
+  - Geslar je web-based generator — korisnik vidi cijelu riječ, autocomplete nije relevantan.
+  - Za Hrvatski, prefix-4 filter eliminira ~35% valjanih riječi bez ikakve koristi:
+    (npr. 'agencija' i 'agent' dijele prefiks 'agen' → samo bi jedno prošlo).
+  - Levenshtein ≥ 3 check u buildPassphrase() (geslar-web/core.js) sprječava
+    generiranje vizualno sličnih parova unutar iste fraze — to je dovoljna zaštita.
 """
 
 import sys
@@ -26,7 +35,7 @@ STOPWORDS_FILE = REPO_ROOT / "data" / "stopwords_hr.txt"
 OUTPUT_FILE = REPO_ROOT / "data" / "final_wordlist.txt"
 
 MIN_LEN = 4
-MAX_LEN = 9
+MAX_LEN = 10
 
 # Minimalni set stop words — funkcionalne i gramatičke riječi koje ne pomažu
 # pamtljivosti passphrase-a
@@ -123,28 +132,23 @@ def main():
     step4_removed = [w for w in step3_out if w in PROFANITY]
     print(f"[4] Profanity: {len(step3_out):,} → {len(step4_out):,} (-{len(step4_removed):,})")
 
-    # Filter 5: 4-char prefix uniqueness
+    # [5] 4-char prefix uniqueness — IZOSTAVLJENO (vidi docstring na vrhu)
+    # Informativni prikaz prefix kolizija (bez eliminacije)
+    step5_out = step4_out  # prolaze sve
+
     prefix_map: dict[str, list[str]] = defaultdict(list)
-    for w in sorted(step4_out):
-        prefix = w[:4]
-        prefix_map[prefix].append(w)
-
-    step5_out = []
-    collisions: list[tuple[str, list[str]]] = []
-    for prefix, group in sorted(prefix_map.items()):
-        step5_out.append(group[0])  # Zadržavamo prvu abecednu
-        if len(group) > 1:
-            collisions.append((prefix, group))
-
-    total_collisions = sum(len(g) - 1 for _, g in collisions)
-    print(f"[5] 4-char prefix unique: {len(step4_out):,} → {len(step5_out):,} (-{total_collisions:,})")
-
-    if collisions:
-        print(f"  Kolizija prefiksa: {len(collisions):,} (prvih 5):")
-        for prefix, group in collisions[:5]:
-            kept = group[0]
-            dropped = group[1:]
-            print(f"    '{prefix}': zadržano '{kept}', odbačeno: {', '.join(dropped)}")
+    for w in sorted(step5_out):
+        prefix_map[w[:4]].append(w)
+    collision_groups = {p: g for p, g in prefix_map.items() if len(g) > 1}
+    total_collision_words = sum(len(g) for g in collision_groups.values())
+    print(f"[5] 4-char prefix (informativno, bez eliminacije):")
+    print(f"    Prefiksa s kolizijama: {len(collision_groups):,} "
+          f"(zahvaća {total_collision_words:,} od {len(step5_out):,} rij.)")
+    print(f"    Levenshtein ≥ 3 check u generatoru sprječava slične parove u frazi.")
+    if collision_groups:
+        print(f"    Primjeri: ", end="")
+        examples = list(collision_groups.items())[:3]
+        print(", ".join(f"'{p}': {'+'.join(g[:3])}" for p, g in examples))
 
     # Distribucija duljina
     print()
@@ -172,16 +176,10 @@ def main():
         mark = " ✓" if h >= 40 else " ⚠️"
         print(f"{k:>8} | {h:>9.1f} bita{mark}")
 
-    # Provjera kolizija — mora biti 0
-    final_prefixes = [w[:4] for w in step5_out]
-    assert len(final_prefixes) == len(set(final_prefixes)), "BUG: ostale prefix kolizije!"
-    print()
-    print(f"4-char prefix kolizija u finalnoj listi: 0 ✓")
-
     # Spremi
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-        for w in step5_out:
+        for w in sorted(step5_out):
             f.write(w + "\n")
 
     print()

@@ -55,8 +55,11 @@ def main():
     parser.add_argument(
         "--top-n",
         type=int,
-        default=30000,
-        help="Koliko najfrekventnijih rijeci zadrzati (default: 30000)",
+        default=50000,
+        help="Koliko najfrekventnijih rijeci zadrzati (default: 50000). "
+             "Napomena: HR je inflektirani jezik — nominativ jednine ima nižu "
+             "individualnu frekvenciju od engleskog ekvivalenta jer se svaki "
+             "leksem rasprostire kroz 7 padeža. Top-50k kompenzira tu razliku.",
     )
     args = parser.parse_args()
 
@@ -98,7 +101,8 @@ def main():
     print()
     print("=== Rezultati ===")
     print(f"Ulaz:              {len(lemmas):>8,}")
-    print(f"Izlaz (u top-{args.top_n // 1000}k): {len(filtered):>8,}")
+    label = f"top-{args.top_n // 1000}k" if args.top_n % 1000 == 0 else f"top-{args.top_n}"
+    print(f"Izlaz ({label}):    {len(filtered):>8,}")
     print(f"Zadržano:          {pct:>8.1f}%")
     print()
     print(f"Zapisano u: {OUTPUT_FILE}")
