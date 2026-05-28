@@ -8,9 +8,6 @@ Dokumentira metodologiju, izvore i principe na kojima se temelji Geslar
 wordlist i generacijska logika. Namijenjen za:
 
 - Internu reprodukciju i audit wordlista
-- Akademsku suradnju (IHJJ, FF Zagreb NLP grupa)
-- Grant prijave (HAMAG-BICRO)
-- Eventualni znanstveni rad
 
 ## Sadržaj
 
